@@ -1,6 +1,12 @@
-import { Column, Entity, JoinColumn, ManyToOne, PrimaryGeneratedColumn, CreateDateColumn, BeforeInsert, BeforeUpdate } from 'typeorm';
-import { Utilisateur } from '../../auth/auth.entity';
-import {StatutTache } from '../../enums/StatutTache';
+import {
+  Column,
+  Entity,
+  PrimaryGeneratedColumn,
+  CreateDateColumn,
+  UpdateDateColumn,
+  DeleteDateColumn,
+} from 'typeorm';
+import { Priorite, StatutTache } from 'src/utils/enums/enums';
 
 @Entity()
 export class tache {
@@ -13,37 +19,25 @@ export class tache {
   @Column({ nullable: true })
   description: string;
 
-  @ManyToOne(() => Utilisateur)
-  @JoinColumn({ name: 'employeAssigneId' })
-  employeAssigne: Utilisateur;
+  @Column({ type: 'decimal', precision: 10, scale: 2, nullable: true })
+  TimeEstimated: number;
 
-  @Column({ type: 'timestamp', nullable: true })
-  dateEcheance: Date;
+  @Column({
+    type: 'enum',
+    enum: Priorite,
+    default: Priorite.MOYENNE,
+  })
+  priorite: Priorite;
 
-  @Column({ nullable: true })
-  priorite: string;
+  @Column({ type: 'enum', enum: StatutTache })
+  type?: StatutTache;
 
   @CreateDateColumn({ type: 'timestamp' })
   dateCreation: Date;
 
-  @Column({ type: 'decimal', precision: 10, scale: 2, nullable: true })
-  dureeEnHeures: number;
+  @UpdateDateColumn({ type: 'timestamp' })
+  update_at: Date;
 
-  @Column({ type: 'boolean', default: false })
-  alerteEnvoyee: boolean;
-
- @Column({ type: 'enum', enum: StatutTache })
-type?: StatutTache;
-
- @Column({ type: 'date' })
-  datesupression: Date;
-
-  @BeforeInsert()
-  @BeforeUpdate()
-  calculerDuree() {
-    if (this.dateEcheance && this.dateCreation) {
-      const diffMs = new Date(this.dateEcheance).getTime() - new Date(this.dateCreation).getTime();
-      this.dureeEnHeures = diffMs / (1000 * 60 * 60); // Conversion en heures
-    }
-  }
+  @DeleteDateColumn({ type: 'timestamp' })
+  delete_at: Date | null;
 }
