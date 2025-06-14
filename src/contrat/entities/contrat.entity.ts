@@ -1,10 +1,25 @@
-import { Column, Entity, JoinColumn, JoinTable, ManyToMany, ManyToOne, OneToMany, PrimaryGeneratedColumn, CreateDateColumn } from 'typeorm';
-import { Utilisateur } from '../../auth/auth.entity';
+import {
+  Column,
+  Entity,
+  JoinColumn,
+  JoinTable,
+  ManyToMany,
+  ManyToOne,
+  PrimaryGeneratedColumn,
+  CreateDateColumn,
+  UpdateDateColumn,
+  DeleteDateColumn,
+  OneToOne,
+  OneToMany,
+} from 'typeorm';
+import { Utilisateur } from '../../User/entities/utilisateur.entity';
 import { tache } from '../../tache/entities/tache.entity';
-import { commentaire } from '../../commentaire/entities/commentaire.entity';
+import { Point } from 'src/utils/types/type';
+import { Presence } from 'src/presence/entities/presence.entity';
+import { Alerte } from 'src/alertes/entities/alertes.entity';
 
 @Entity()
-export class Contract {
+export class Contrat {
   @PrimaryGeneratedColumn('uuid')
   idContrat: string;
 
@@ -12,15 +27,17 @@ export class Contract {
   @JoinColumn({ name: 'utilisateurId' })
   utilisateur: Utilisateur;
 
-  // Tableau contenant latitude et longitude
-  @Column('float', { array: true })
-  lieu: number[];
+  @Column('geometry', {
+    spatialFeatureType: 'Point',
+    srid: 4326, // Système de coordonnées WGS 84 (standard GPS)
+  })
+  lieu: Point;
 
   @Column({ type: 'timestamp' })
-  horaireDebut: Date;
+  dateDebut: Date;
 
   @Column({ type: 'timestamp' })
-  horaireFin: Date;
+  dateFin: Date;
 
   @Column({ nullable: true })
   description: string;
@@ -28,18 +45,9 @@ export class Contract {
   @Column()
   poste: string;
 
+  // la duree de la pause d'un contract en heures.
   @Column({ nullable: true })
-  pause: string;
-
-  @ManyToMany(() => tache, { cascade: true })
-  @JoinTable()
-  taches: tache[];
-
-  @OneToMany(() => commentaire, commentaire => commentaire.contrat, { cascade: true })
-  commentaires: commentaire[];
-
-  @CreateDateColumn({ type: 'timestamp' })
-  dateCreation: Date;
+  pause: number;
 
   @Column({ default: false })
   estGabarit: boolean;
@@ -47,29 +55,29 @@ export class Contract {
   @Column({ nullable: true })
   nomGabarit: string;
 
-  // Nouveau champ pour marquer si le contrat est terminé
-  @Column({ default: false })
-  estTermine: boolean;
-
-
-  @Column({ nullable: true })
-  remarques: string;
-
   @Column({ default: false })
   estRepetitif: boolean;
-  
-  // Nombre de jours pendant lesquels répéter
+
+  // Nombre de jours répétition
   @Column({ nullable: true })
   nombreJoursRepetition: number;
-  
-  // Compteur des répétitions créées
-  @Column({ default: 0 })
-  repetitionsCreees: number;
-  
-  // ID du contrat parent (pour les contrats générés par répétition)
-  @Column({ nullable: true })
-  contratParentId: string;
 
-   @Column({ type: 'date' })
-  datesupression: Date;
+  @CreateDateColumn({ type: 'timestamp' })
+  dateCreation: Date;
+
+  @UpdateDateColumn({ type: 'timestamp' })
+  update_at: Date;
+
+  @DeleteDateColumn({ type: 'timestamp' })
+  delete_at: Date | null;
+
+  @ManyToMany(() => tache, { cascade: ['insert', 'update'] })
+  @JoinTable()
+  taches: tache[];
+
+  @OneToOne(() => Presence, (presence) => presence.contrat)
+  presence: Presence;
+
+  @OneToMany(() => Alerte, (alerte) => alerte.contract)
+  alerte: Alerte;
 }

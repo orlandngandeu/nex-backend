@@ -1,19 +1,27 @@
-import { Column, Entity, JoinColumn, ManyToOne, PrimaryGeneratedColumn } from 'typeorm';
-import { Contract } from '../../contrat/entities/contrat.entity';
-import { Utilisateur } from '../../auth/auth.entity';
+import {
+  Column,
+  Entity,
+  JoinColumn,
+  ManyToOne,
+  OneToOne,
+  PrimaryGeneratedColumn,
+} from 'typeorm';
+import { Contrat } from '../../contrat/entities/contrat.entity';
+import { Utilisateur } from '../../User/entities/utilisateur.entity';
+import { Point } from 'src/utils/types/type';
 
 @Entity()
 export class Presence {
-  @PrimaryGeneratedColumn('uuid')
-  idPresence: string;
+  @PrimaryGeneratedColumn()
+  idPresence: number;
 
   @ManyToOne(() => Utilisateur)
   @JoinColumn({ name: 'utilisateurId' })
   utilisateur: Utilisateur;
 
-  @ManyToOne(() => Contract, { nullable: true, onDelete: 'SET NULL' })
+  @OneToOne(() => Contrat, { nullable: false, onDelete: 'RESTRICT' })
   @JoinColumn({ name: 'contratId' })
-  contrat: Contract;
+  contrat: Contrat;
 
   @Column({ type: 'timestamp' })
   heureArrivee: Date;
@@ -21,15 +29,18 @@ export class Presence {
   @Column({ type: 'timestamp', nullable: true })
   heureDepart: Date;
 
-  @Column('float', { array: true, nullable: true })
-  localisationArrivee: number[];
+  @Column('geometry', {
+    spatialFeatureType: 'Point',
+    srid: 4326,
+  })
+  localisationArrivee: Point;
 
-  @Column('float', { array: true, nullable: true })
-  localisationDepart: number[];
-  
+  @Column('geometry', {
+    spatialFeatureType: 'Point',
+    srid: 4326,
+  })
+  localisationDepart: Point;
+
   @Column({ nullable: true })
-  remarques: string;
-
-   @Column({ type: 'date' })
-  datesupression: Date;
+  notes: string;
 }
