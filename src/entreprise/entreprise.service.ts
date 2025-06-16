@@ -29,42 +29,119 @@ export class EntrepriseService {
     private utilisateurEntrepriseRepository: Repository<UtilisateurEntreprise>,
   ) {}
 
-  async create(createEntrepriseDto: CreateEntrepriseDto, adminId: string) {
-    // Vérifier que le manager existe et est un manager
-    const manager = await this.utilisateurRepository.findOne({
-      where: { idUtilisateur: createEntrepriseDto.managerId, role: Role.MANAGER },
-    });
+async createEntreprise(createEntrepriseDto: CreateEntrepriseDto, adminId: string) {
+  // Vérifier que l'utilisateur existe et est un admin
+  const admin = await this.utilisateurRepository.findOne({
+    where: { idUtilisateur: adminId, role: Role.ADMIN },
+  });
+  if (!admin) {
+    throw new NotFoundException('Administrateur introuvable');
+  }
 
-    if (!manager) {
-      throw new NotFoundException('Manager introuvable ou rôle invalide');
+  // Créer l'entreprise
+  const entreprise = this.entrepriseRepository.create({
+    nom: createEntrepriseDto.nom,
+    domaine: createEntrepriseDto.domaine,
+    adresse: createEntrepriseDto.adresse,
+    email: createEntrepriseDto.email,
+    nbre_employers: createEntrepriseDto.nbre_employers,
+  });
+  
+  const savedEntreprise = await this.entrepriseRepository.save(entreprise);
+
+  // Associer l'admin créateur comme gérant de l'entreprise
+  const utilisateurEntreprise = this.utilisateurEntrepriseRepository.create({
+    utilisateur: admin,
+    entreprise: savedEntreprise,
+    isOwner: true,
+  });
+  
+  await this.utilisateurEntrepriseRepository.save(utilisateurEntreprise);
+
+  return {
+    message: 'Entreprise créée avec succès',
+    entreprise: savedEntreprise,
+    gerant: admin.nom,
+  };
+}
+
+async assignManager(
+  entrepriseId: string, 
+  newManagerId: string, 
+  currentUserId: string,
+  currentUserRole: Role
+) {
+  // Vérifier que l'entreprise existe
+  const entreprise = await this.entrepriseRepository.findOne({
+    where: { idEntreprise: entrepriseId },
+  });
+  if (!entreprise) {
+    throw new NotFoundException('Entreprise introuvable');
+  }
+
+  // Vérifier que le nouveau gérant existe et a le bon rôle
+  const newManager = await this.utilisateurRepository.findOne({
+    where: { 
+      idUtilisateur: newManagerId, 
+      role: Role.MANAGER 
+    },
+  });
+  if (!newManager) {
+    throw new NotFoundException('Nouveau gérant introuvable ou rôle invalide');
+  }
+
+  // Si l'utilisateur actuel n'est pas admin, vérifier qu'il est le gérant actuel
+  if (currentUserRole !== Role.ADMIN) {
+    const currentManagerAssociation = await this.utilisateurEntrepriseRepository.findOne({
+      where: {
+        utilisateur: { idUtilisateur: currentUserId },
+        entreprise: { idEntreprise: entrepriseId },
+        isOwner: true,
+      },
+    });
+    
+    if (!currentManagerAssociation) {
+      throw new ForbiddenException('Vous n\'êtes pas autorisé à modifier le gérant de cette entreprise');
     }
+  }
 
-    // Créer l'entreprise
-    const entreprise = this.entrepriseRepository.create({
-      nom: createEntrepriseDto.nom,
-      domaine: createEntrepriseDto.domaine,
-      adresse: createEntrepriseDto.adresse,
-      email: createEntrepriseDto.email,
-      nbre_employers: createEntrepriseDto.nbre_employers,
-    });
+  // Retirer le statut de gérant à l'ancien gérant
+  await this.utilisateurEntrepriseRepository.update(
+    { 
+      entreprise: { idEntreprise: entrepriseId },
+      isOwner: true 
+    },
+    { isOwner: false }
+  );
 
-    const savedEntreprise = await this.entrepriseRepository.save(entreprise);
+  // Vérifier si le nouveau gérant est déjà associé à l'entreprise
+  let managerAssociation = await this.utilisateurEntrepriseRepository.findOne({
+    where: {
+      utilisateur: { idUtilisateur: newManagerId },
+      entreprise: { idEntreprise: entrepriseId },
+    },
+  });
 
-    // Associer le manager à l'entreprise
-    const utilisateurEntreprise = this.utilisateurEntrepriseRepository.create({
-      utilisateur: manager,
-      entreprise: savedEntreprise,
+  if (managerAssociation) {
+    // Mettre à jour l'association existante
+    managerAssociation.isOwner = true;
+    await this.utilisateurEntrepriseRepository.save(managerAssociation);
+  } else {
+    // Créer une nouvelle association
+    managerAssociation = this.utilisateurEntrepriseRepository.create({
+      utilisateur: newManager,
+      entreprise: entreprise,
       isOwner: true,
     });
-
-    await this.utilisateurEntrepriseRepository.save(utilisateurEntreprise);
-
-    return {
-      message: 'Entreprise créée avec succès',
-      entreprise: savedEntreprise,
-      manager: manager.nom,
-    };
+    await this.utilisateurEntrepriseRepository.save(managerAssociation);
   }
+
+  return {
+    message: 'Gérant affecté avec succès',
+    entreprise: entreprise.nom,
+    nouveauGerant: newManager.nom,
+  };
+}
 
   async findAll(paginationDto: PaginationDto) {
     const { page = 1, limit = 10 } = paginationDto;
