@@ -1,11 +1,12 @@
 import { Entreprise } from 'src/entreprise/entities/entreprise.entity';
 import { Utilisateur } from 'src/User/entities/utilisateur.entity';
-import { Column, Entity, ManyToOne, PrimaryColumn } from 'typeorm';
+import { Column, Entity, ManyToOne, PrimaryGeneratedColumn } from 'typeorm';
 
 @Entity()
 export class UtilisateurEntreprise {
-  @PrimaryColumn()
-  id: number;
+@PrimaryGeneratedColumn()
+id: number;
+
 
   @ManyToOne(() => Utilisateur, (utilisateur) => utilisateur.entreprises)
   utilisateur!: Utilisateur;
