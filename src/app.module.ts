@@ -48,7 +48,7 @@ import { EntrepriseModule } from './entreprise/entreprise.module';
         ttl: 0, // Désactiver le TTL global pour gérer manuellement
         // Options Redis supplémentaires
         socket: {
-          connectTimeout: 60000,
+          connectTimeout: 300,
           lazyConnect: true,
         },
         // Retry configuration

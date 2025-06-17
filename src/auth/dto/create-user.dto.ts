@@ -20,8 +20,9 @@ export class CreateUserDto {
   telephone: string;
 
   @IsString()
+  @IsOptional()
   @MinLength(6)
-  motDePasse: string;
+  motDePasse?: string;
 
   @IsEnum(Role)
   role: Role;
