@@ -12,6 +12,9 @@ import {
   Res,
   HttpException,
   HttpStatus,
+  HttpCode,
+  Req
+  
 } from '@nestjs/common';
 import { EntrepriseService } from './entreprise.service';
 import { CreateEntrepriseDto } from './dto/create-entreprise.dto';
@@ -24,19 +27,22 @@ import { RolesGuard } from '../auth/guards/roles.guard';
 import { Roles } from '../auth/decorators/roles.decorator';
 import { Role } from '../utils/enums/enums';
 import { Response } from 'express';
+import { AssignManagerDto } from './dto/assignManager.dto';
 
 @Controller('entreprises')
 @UseGuards(JwtAuthGuard, RolesGuard)
 export class EntrepriseController {
   constructor(private readonly entrepriseService: EntrepriseService) {}
 
-  @Post()
+ @Post()
   @Roles(Role.ADMIN)
-  async create(
+  @HttpCode(HttpStatus.CREATED)
+  async createEntreprise(
     @Body() createEntrepriseDto: CreateEntrepriseDto,
-    @Request() req: any,
+    @Req() req: any
   ) {
-    return this.entrepriseService.create(createEntrepriseDto, req.user.idUtilisateur);
+    const adminId = req.user.idUtilisateur;
+    return await this.entrepriseService.createEntreprise(createEntrepriseDto, adminId);
   }
 
   @Get()
@@ -70,6 +76,25 @@ export class EntrepriseController {
     @Request() req: any,
   ) {
     return this.entrepriseService.update(id, updateEntrepriseDto, req.user.idUtilisateur);
+  }
+
+@Patch(':id/assign-manager')
+  @Roles(Role.ADMIN, Role.MANAGER)
+  @HttpCode(HttpStatus.OK)
+  async assignManager(
+    @Param('id') entrepriseId: string,
+    @Body() assignManagerDto: AssignManagerDto,
+    @Req() req: any
+  ) {
+    const currentUserId = req.user.idUtilisateur;
+    const currentUserRole = req.user.role;
+    
+    return await this.entrepriseService.assignManager(
+      entrepriseId, 
+      assignManagerDto.newManagerId, 
+      currentUserId,
+      currentUserRole
+    );
   }
 
   @Post(':id/invite')

@@ -19,8 +19,4 @@ export class CreateEntrepriseDto {
   @IsNumber()
   @Min(1)
   nbre_employers: number;
-
-  @IsUUID()
-  @IsNotEmpty()
-  managerId: string; 
 }
