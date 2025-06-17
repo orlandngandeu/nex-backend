@@ -9,12 +9,13 @@ export class CreateUserDto {
   @IsOptional()
   email?: string;
 
-  @IsPhoneNumber('CM')
+  @IsPhoneNumber()
   telephone: string;
 
   @IsString()
+  @IsOptional()
   @MinLength(6)
-  motDePasse: string;
+  motDePasse?: string;
 
   @IsEnum(Role)
   role: Role;
