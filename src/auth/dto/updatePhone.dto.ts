@@ -1,6 +1,6 @@
-import {  IsPhoneNumber } from 'class-validator';
+import { IsPhoneNumber } from 'class-validator';
 
 export class UpdatePhoneDto {
-  @IsPhoneNumber('CM', { message: 'Format de téléphone invalide' })
+  @IsPhoneNumber()
   nouveauTelephone: string;
 }

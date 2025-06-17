@@ -8,7 +8,6 @@ import {
   CreateDateColumn,
   UpdateDateColumn,
   DeleteDateColumn,
-  OneToOne,
   OneToMany,
 } from 'typeorm';
 import { Utilisateur } from '../../User/entities/utilisateur.entity';
@@ -37,10 +36,7 @@ export class Contrat {
   @Column({ nullable: true })
   description: string;
 
-  @Column()
-  poste: string;
-
-  // la duree de la pause d'un contract en heures.
+  // la duree de la pause d'un contract en minutes.
   @Column({ nullable: true })
   pause: number;
 
@@ -49,9 +45,6 @@ export class Contrat {
 
   @Column({ nullable: true })
   nomGabarit: string;
-
-  @Column({ default: false })
-  estRepetitif: boolean;
 
   // Nombre de jours répétition
   @Column({ nullable: true })
@@ -77,9 +70,9 @@ export class Contrat {
   @JoinColumn()
   utilisateur: Utilisateur[];
 
-  @OneToOne(() => Presence, (presence) => presence.contrat)
-  presence: Presence;
+  @OneToMany(() => Presence, (presence) => presence.contrat)
+  presence: Presence[];
 
   @OneToMany(() => Commentaire, (comment) => comment.contrat)
-  comment: Commentaire;
+  comment: Commentaire[];
 }

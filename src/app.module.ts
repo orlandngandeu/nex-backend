@@ -9,43 +9,44 @@ import { TwilioModule } from './twillio/twillio.module';
 import { AuthModule } from './auth/auth.module';
 import { CacheModule } from '@nestjs/cache-manager';
 import { redisStore } from 'cache-manager-redis-yet';
-import { TacheModule } from './tache/tache.module'; 
+import { TacheModule } from './tache/tache.module';
 import { EntrepriseModule } from './entreprise/entreprise.module';
 
 @Module({
   imports: [
     ConfigModule.forRoot({ isGlobal: true, envFilePath: '.env' }),
     ScheduleModule.forRoot(),
-    
+
     TypeOrmModule.forRootAsync({
       imports: [ConfigModule],
       useFactory: async (configService: ConfigService) => ({
         type: 'postgres',
         url: configService.get<string>('DATABASE_URL'),
-        entities: [__dirname + "/**/*.entity{.ts,.js}"],
+        entities: [__dirname + '/**/*.entity{.ts,.js}'],
         synchronize: configService.get<string>('NODE_ENV') !== 'production',
         parseInputFloatsEnabled: true,
         ssl: { rejectUnauthorized: false },
       }),
       inject: [ConfigService],
     }),
-    
+
     MailerModule,
     TwilioModule,
     AuthModule,
     TacheModule,
     EntrepriseModule,
-    
-    // Cache avec Redis - Configuration corrigée
+
+    // Cache avec Redis
     CacheModule.registerAsync({
       imports: [ConfigModule],
       useFactory: async (configService: ConfigService) => ({
         store: redisStore,
-        host: configService.get<string>('REDIS_HOST') || 'localhost',
+        host: configService.get<string>('REDIS_HOST'),
         port: configService.get<number>('REDIS_PORT') || 6379,
-        password: configService.get<string>('REDIS_PASSWORD'), // Si vous avez un mot de passe
-        db: configService.get<number>('REDIS_DB') || 0,
-        ttl: 0, // Désactiver le TTL global pour gérer manuellement
+        username: configService.get<string>('REDIS_USERNAME'),
+        password: configService.get<string>('REDIS_PASSWORD'),
+        tls: configService.get('REDIS_TLS') === 'true',
+        ttl: 0,
         // Options Redis supplémentaires
         socket: {
           connectTimeout: 300,
@@ -57,8 +58,8 @@ import { EntrepriseModule } from './entreprise/entreprise.module';
         maxRetriesPerRequest: null,
       }),
       inject: [ConfigService],
-      isGlobal: true
-    })
+      isGlobal: true,
+    }),
   ],
   controllers: [AppController],
   providers: [AppService],
