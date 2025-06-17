@@ -4,7 +4,6 @@ import {
   JoinColumn,
   JoinTable,
   ManyToMany,
-  ManyToOne,
   PrimaryGeneratedColumn,
   CreateDateColumn,
   UpdateDateColumn,
@@ -16,16 +15,12 @@ import { Utilisateur } from '../../User/entities/utilisateur.entity';
 import { tache } from '../../tache/entities/tache.entity';
 import { Point } from 'src/utils/types/type';
 import { Presence } from 'src/presence/entities/presence.entity';
-import { Alerte } from 'src/alertes/entities/alertes.entity';
+import { Commentaire } from 'src/commentaires/entities/commentaire.entity';
 
 @Entity()
 export class Contrat {
   @PrimaryGeneratedColumn('uuid')
   idContrat: string;
-
-  @ManyToOne(() => Utilisateur, { nullable: true })
-  @JoinColumn({ name: 'utilisateurId' })
-  utilisateur: Utilisateur;
 
   @Column('geometry', {
     spatialFeatureType: 'Point',
@@ -75,9 +70,16 @@ export class Contrat {
   @JoinTable()
   taches: tache[];
 
+  @ManyToMany(() => Utilisateur, {
+    nullable: true,
+    cascade: ['insert', 'update'],
+  })
+  @JoinColumn()
+  utilisateur: Utilisateur[];
+
   @OneToOne(() => Presence, (presence) => presence.contrat)
   presence: Presence;
 
-  @OneToMany(() => Alerte, (alerte) => alerte.contract)
-  alerte: Alerte;
+  @OneToMany(() => Commentaire, (comment) => comment.contrat)
+  comment: Commentaire;
 }

@@ -8,18 +8,18 @@ import {
 } from 'typeorm';
 
 @Entity()
-export class Alerte {
+export class Commentaire {
   @PrimaryGeneratedColumn('uuid')
   idComment: string;
 
   @Column({ type: 'text', nullable: false })
   message: string;
 
-  @ManyToOne(() => Contrat, (contrat) => contrat.alerte, {
+  @ManyToOne(() => Contrat, (contrat) => contrat.comment, {
     nullable: false,
     onDelete: 'RESTRICT',
   })
-  contract: Contrat;
+  contrat: Contrat;
 
   @CreateDateColumn({ type: 'timestamp' })
   dateCreation: Date;

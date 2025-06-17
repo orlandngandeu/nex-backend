@@ -13,7 +13,7 @@ export class tache {
   @PrimaryGeneratedColumn('uuid')
   idTache: string;
 
-  @Column()
+  @Column({ nullable: true })
   titre: string;
 
   @Column({ nullable: true })

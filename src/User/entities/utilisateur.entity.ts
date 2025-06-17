@@ -20,7 +20,7 @@ export class Utilisateur {
   nom: string;
 
   @Column({ unique: true, nullable: true })
-  email: string;
+  email?: string;
 
   @Column({ unique: true, nullable: false })
   telephone: string;
@@ -34,11 +34,11 @@ export class Utilisateur {
   })
   role: Role;
 
-  @OneToMany(() => UtilisateurEntreprise, (ue) => ue.utilisateur)
-  entreprises!: UtilisateurEntreprise[];
-
   @Column({ default: true })
   isActif: boolean;
+
+  @OneToMany(() => UtilisateurEntreprise, (ue) => ue.utilisateur)
+  entreprises!: UtilisateurEntreprise[];
 
   @OneToMany(() => Conge, (conge) => conge.utilisateur)
   conges: Conge[];

@@ -4,9 +4,8 @@ import { Column, Entity, ManyToOne, PrimaryGeneratedColumn } from 'typeorm';
 
 @Entity()
 export class UtilisateurEntreprise {
-@PrimaryGeneratedColumn()
-id: number;
-
+  @PrimaryGeneratedColumn()
+  id: number;
 
   @ManyToOne(() => Utilisateur, (utilisateur) => utilisateur.entreprises)
   utilisateur!: Utilisateur;
