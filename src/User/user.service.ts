@@ -80,6 +80,15 @@ export class UsersService {
     return user;
   }
 
+async findByEmail(email: string): Promise<Utilisateur | null> {
+  return this.userRepository.findOne({ where: { email, delete_at: IsNull() } });
+}
+
+async findByI(id: string): Promise<Utilisateur | null> {
+  return this.userRepository.findOne({ where: { idUtilisateur: id, delete_at: IsNull() } });
+}
+
+
   async findByIdWithDeleted(id: string): Promise<Utilisateur> {
     // Cherche tous les utilisateurs (supprimés ou non) - utile pour la restauration
     const user = await this.userRepository.findOne({
@@ -258,5 +267,21 @@ export class UsersService {
       .getManyAndCount();
 
     return { users, total };
+  }
+
+  async updatePhone(userId: string, newPhone: string): Promise<void> {
+    // Vérifier que l'utilisateur existe
+    const user = await this.userRepository.findOne({
+      where: { idUtilisateur: userId }
+    });
+
+    if (!user) {
+      throw new NotFoundException('Utilisateur non trouvé');
+    }
+
+    // Mettre à jour le numéro de téléphone
+    await this.userRepository.update(userId, {
+      telephone: newPhone
+    });
   }
 }
