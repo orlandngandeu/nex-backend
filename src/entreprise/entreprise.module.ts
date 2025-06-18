@@ -5,10 +5,11 @@ import { EntrepriseController } from './entreprise.controller';
 import { Entreprise } from './entities/entreprise.entity';
 import { Utilisateur } from '../User/entities/utilisateur.entity';
 import { UtilisateurEntreprise } from '../UtilisateurEntreprise/entities/utilisateur-entreprise.entity';
+import { TwilioModule } from 'src/twillio/twillio.module';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([Entreprise, Utilisateur, UtilisateurEntreprise]),
+    TypeOrmModule.forFeature([Entreprise, Utilisateur, UtilisateurEntreprise]),TwilioModule
   ],
   controllers: [EntrepriseController],
   providers: [EntrepriseService],
