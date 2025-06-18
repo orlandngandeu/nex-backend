@@ -1,0 +1,2 @@
+#!/bin/sh
+psql -U $PGUSER -d $PGDATABASE -c "CREATE EXTENSION IF NOT EXISTS postgis;"

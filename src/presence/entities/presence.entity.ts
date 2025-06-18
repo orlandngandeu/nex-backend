@@ -3,7 +3,6 @@ import {
   Entity,
   JoinColumn,
   ManyToOne,
-  OneToOne,
   PrimaryGeneratedColumn,
 } from 'typeorm';
 import { Contrat } from '../../contrat/entities/contrat.entity';
@@ -12,14 +11,14 @@ import { Point } from 'src/utils/types/type';
 
 @Entity()
 export class Presence {
-  @PrimaryGeneratedColumn()
-  idPresence: number;
+  @PrimaryGeneratedColumn('uuid')
+  idPresence: string;
 
   @ManyToOne(() => Utilisateur)
   @JoinColumn({ name: 'utilisateurId' })
   utilisateur: Utilisateur;
 
-  @OneToOne(() => Contrat, { nullable: false, onDelete: 'RESTRICT' })
+  @ManyToOne(() => Contrat, { nullable: false, onDelete: 'RESTRICT' })
   @JoinColumn({ name: 'contratId' })
   contrat: Contrat;
 
@@ -29,12 +28,14 @@ export class Presence {
   @Column({ type: 'timestamp', nullable: true })
   heureDepart: Date;
 
+  //position de pointage arrivee
   @Column('geometry', {
     spatialFeatureType: 'Point',
     srid: 4326,
   })
   localisationArrivee: Point;
 
+  //position de pointage depart
   @Column('geometry', {
     spatialFeatureType: 'Point',
     srid: 4326,

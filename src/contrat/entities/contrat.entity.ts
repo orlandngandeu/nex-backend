@@ -4,28 +4,22 @@ import {
   JoinColumn,
   JoinTable,
   ManyToMany,
-  ManyToOne,
   PrimaryGeneratedColumn,
   CreateDateColumn,
   UpdateDateColumn,
   DeleteDateColumn,
-  OneToOne,
   OneToMany,
 } from 'typeorm';
 import { Utilisateur } from '../../User/entities/utilisateur.entity';
 import { tache } from '../../tache/entities/tache.entity';
 import { Point } from 'src/utils/types/type';
 import { Presence } from 'src/presence/entities/presence.entity';
-import { Alerte } from 'src/alertes/entities/alertes.entity';
+import { Commentaire } from 'src/commentaires/entities/commentaire.entity';
 
 @Entity()
 export class Contrat {
   @PrimaryGeneratedColumn('uuid')
   idContrat: string;
-
-  @ManyToOne(() => Utilisateur, { nullable: true })
-  @JoinColumn({ name: 'utilisateurId' })
-  utilisateur: Utilisateur;
 
   @Column('geometry', {
     spatialFeatureType: 'Point',
@@ -42,10 +36,7 @@ export class Contrat {
   @Column({ nullable: true })
   description: string;
 
-  @Column()
-  poste: string;
-
-  // la duree de la pause d'un contract en heures.
+  // la duree de la pause d'un contract en minutes.
   @Column({ nullable: true })
   pause: number;
 
@@ -54,9 +45,6 @@ export class Contrat {
 
   @Column({ nullable: true })
   nomGabarit: string;
-
-  @Column({ default: false })
-  estRepetitif: boolean;
 
   // Nombre de jours répétition
   @Column({ nullable: true })
@@ -75,9 +63,16 @@ export class Contrat {
   @JoinTable()
   taches: tache[];
 
-  @OneToOne(() => Presence, (presence) => presence.contrat)
-  presence: Presence;
+  @ManyToMany(() => Utilisateur, {
+    nullable: true,
+    cascade: ['insert', 'update'],
+  })
+  @JoinColumn()
+  utilisateur: Utilisateur[];
 
-  @OneToMany(() => Alerte, (alerte) => alerte.contract)
-  alerte: Alerte;
+  @OneToMany(() => Presence, (presence) => presence.contrat)
+  presence: Presence[];
+
+  @OneToMany(() => Commentaire, (comment) => comment.contrat)
+  comment: Commentaire[];
 }

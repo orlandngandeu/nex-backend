@@ -20,11 +20,11 @@ export class Entreprise {
   @Column({ nullable: false })
   domaine: string;
 
-  @Column()
-  adresse: string;
-
   @Column({ unique: true })
   email: string;
+
+  @Column()
+  adresse: string;
 
   @Column()
   nbre_employers: number;

@@ -1,7 +1,7 @@
 import { IsString, IsPhoneNumber } from 'class-validator';
 
 export class ResendCodeDto {
-  @IsPhoneNumber('CM', { message: 'Format de téléphone invalide' })
+  @IsPhoneNumber()
   phone: string;
 
   @IsString()

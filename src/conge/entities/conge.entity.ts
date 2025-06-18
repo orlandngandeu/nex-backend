@@ -19,7 +19,7 @@ export class Conge {
   motif: string;
 
   @Column({ type: 'text', nullable: true })
-  motifRefus: string | null;
+  motifRefus?: string;
 
   @Column({
     type: 'enum',
