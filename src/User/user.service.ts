@@ -6,6 +6,7 @@ import { CreateUserDto } from '../auth/dto/create-user.dto';
 import { FilterUsersDto } from './dto/filter-users.dto';
 import { Role } from '../utils/enums/enums';
 import * as bcrypt from 'bcrypt';
+import { UpdateUtilisateurDto } from './dto/updateUtilisateur.dto';
 
 @Injectable()
 export class UsersService {
@@ -261,6 +262,8 @@ async findByI(id: string): Promise<Utilisateur | null> {
       );
     }
 
+    
+
     const [users, total] = await queryBuilder
       .skip(skip)
       .take(parseInt(limit))
@@ -268,6 +271,45 @@ async findByI(id: string): Promise<Utilisateur | null> {
 
     return { users, total };
   }
+
+   async updateUtilisateur(id: string, dto: UpdateUtilisateurDto) {
+    const utilisateur = await this.userRepository.findOne({
+    where: {
+    idUtilisateur: id,
+    delete_at: IsNull(),
+  },
+});
+
+    if (!utilisateur) {
+      throw new NotFoundException('Utilisateur non trouvé');
+    }
+
+    if (dto.email && dto.email !== utilisateur.email) {
+      const existingEmail = await this.userRepository.findOne({
+        where: { email: dto.email },
+      });
+      if (existingEmail) {
+        throw new ConflictException('Cet email est déjà utilisé');
+      }
+    }
+
+    if (dto.telephone && dto.telephone !== utilisateur.telephone) {
+      const existingPhone = await this.userRepository.findOne({
+        where: { telephone: dto.telephone },
+      });
+      if (existingPhone) {
+        throw new ConflictException('Ce numéro est déjà utilisé');
+      }
+    }
+
+    if (dto.motDePasse) {
+      dto.motDePasse = await bcrypt.hash(dto.motDePasse, 10);
+    }
+
+    Object.assign(utilisateur, dto);
+    return await this.userRepository.save(utilisateur);
+  }
+
 
   async updatePhone(userId: string, newPhone: string): Promise<void> {
     // Vérifier que l'utilisateur existe

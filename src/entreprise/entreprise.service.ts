@@ -17,6 +17,8 @@ import { PaginationDto } from './dto/pagination.dto';
 import { Role } from '../utils/enums/enums';
 import * as PDFDocument from 'pdfkit';
 import { v4 as uuidv4 } from 'uuid';
+import { TwilioService } from 'src/twillio/twillio.service';
+
 
 @Injectable()
 export class EntrepriseService {
@@ -27,6 +29,7 @@ export class EntrepriseService {
     private utilisateurRepository: Repository<Utilisateur>,
     @InjectRepository(UtilisateurEntreprise)
     private utilisateurEntrepriseRepository: Repository<UtilisateurEntreprise>,
+     private twilioService: TwilioService,
   ) {}
 
 async createEntreprise(createEntrepriseDto: CreateEntrepriseDto, adminId: string) {
@@ -244,49 +247,78 @@ async assignManager(
     };
   }
 
-  async inviteUser(id: string, inviteUserDto: InviteUserDto, inviterId: string) {
-    const entreprise = await this.findOne(id);
-    
-    // Vérifier les permissions
-    await this.checkUserPermissions(id, inviterId);
-
-    // Vérifier que l'utilisateur existe
-    const user = await this.utilisateurRepository.findOne({
-      where: { idUtilisateur: inviteUserDto.userId },
-    });
-
-    if (!user) {
-      throw new NotFoundException('Utilisateur introuvable');
-    }
-
-    // Vérifier si l'utilisateur n'est pas déjà dans l'entreprise
-    const existingRelation = await this.utilisateurEntrepriseRepository.findOne({
-      where: {
-        utilisateur: { idUtilisateur: inviteUserDto.userId },
-        entreprise: { idEntreprise: id },
-      },
-    });
-
-    if (existingRelation) {
-      throw new BadRequestException('Utilisateur déjà membre de cette entreprise');
-    }
-
-    // Créer la relation
-    const utilisateurEntreprise = this.utilisateurEntrepriseRepository.create({
-      utilisateur: user,
-      entreprise,
-      isOwner: false,
-    });
-
-    await this.utilisateurEntrepriseRepository.save(utilisateurEntreprise);
-
-    return {
-      message: 'Utilisateur invité avec succès',
-      user: user.nom,
-      entreprise: entreprise.nom,
-    };
+// Dans votre service d'entreprise
+async inviteUser(id: string, inviteUserDto: InviteUserDto, inviterId: string) {
+  const entreprise = await this.findOne(id);
+ 
+  // Vérifier les permissions
+  await this.checkUserPermissions(id, inviterId);
+  
+  // Vérifier que l'utilisateur existe
+  const user = await this.utilisateurRepository.findOne({
+    where: { idUtilisateur: inviteUserDto.userId },
+  });
+  if (!user) {
+    throw new NotFoundException('Utilisateur introuvable');
   }
+  
+  // Vérifier si l'utilisateur n'est pas déjà dans l'entreprise
+  const existingRelation = await this.utilisateurEntrepriseRepository.findOne({
+    where: {
+      utilisateur: { idUtilisateur: inviteUserDto.userId },
+      entreprise: { idEntreprise: id },
+    },
+  });
+  if (existingRelation) {
+    throw new BadRequestException('Utilisateur déjà membre de cette entreprise');
+  }
+  
+  // L'utilisateur a déjà un compte avec ses identifiants
+  
+  // Créer la relation
+  const utilisateurEntreprise = this.utilisateurEntrepriseRepository.create({
+    utilisateur: user,
+    entreprise,
+    isOwner: false,
+  });
+  await this.utilisateurEntrepriseRepository.save(utilisateurEntreprise);
+  
+  // Préparer le message SMS avec les identifiants existants
+  const messageSMS = `
+🎉 Félicitations ${user.nom} !
 
+Vous avez été invité(e) à rejoindre l'entreprise "${entreprise.nom}".
+
+Vos identifiants de connexion :
+📱 Téléphone : ${user.telephone}
+🔐 Mot de passe : ${user.motDePasse}
+
+Connectez-vous dès maintenant pour accéder à votre nouvelle entreprise.
+
+Bienvenue dans l'équipe ! 🚀
+  `.trim();
+  
+  // Envoyer le SMS
+  try {
+    await this.twilioService.sendSMS(user.telephone, messageSMS);
+  } catch (error) {
+    // Log l'erreur mais ne pas faire échouer l'invitation
+    console.error('Erreur lors de l\'envoi du SMS:', error);
+    // Optionnel: vous pourriez vouloir supprimer la relation créée si le SMS échoue
+  }
+  
+  return {
+    message: 'Utilisateur invité avec succès et SMS envoyé',
+    user: user.nom,
+    entreprise: entreprise.nom,
+    smsEnvoye: true
+  };
+}
+
+// Méthodes utilitaires pour le service SMS (optionnelles)
+generateVerificationCode(): string {
+  return Math.floor(100000 + Math.random() * 900000).toString();
+}
   async transferOwnership(
     id: string,
     transferOwnershipDto: TransferOwnershipDto,
