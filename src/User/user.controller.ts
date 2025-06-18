@@ -1,7 +1,8 @@
-import { Controller, Get, Post, Delete, Patch, Param, Query, Body, HttpCode, HttpStatus } from '@nestjs/common';
+import { Controller, Get, Post, Delete, Patch, Param, Query, Body, HttpCode, HttpStatus, ParseUUIDPipe } from '@nestjs/common';
 import { UsersService } from './user.service';
 import { FilterUsersDto } from './dto/filter-users.dto';
 import { ApiTags, ApiOperation, ApiResponse, ApiQuery, ApiParam } from '@nestjs/swagger';
+import { UpdateUtilisateurDto } from './dto/updateUtilisateur.dto';
 
 @ApiTags('users')
 @Controller('users')
@@ -50,6 +51,15 @@ export class UsersController {
       user 
     };
   }
+
+   @Patch(':id')
+  async updateUtilisateur(
+    @Param('id', new ParseUUIDPipe()) id: string,
+    @Body() updateDto: UpdateUtilisateurDto,
+  ) {
+    return this.usersService.updateUtilisateur(id, updateDto);
+  }
+
 
   // Activer/désactiver un utilisateur
   @Patch(':id/toggle-activation')
