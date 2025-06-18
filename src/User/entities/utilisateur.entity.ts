@@ -10,6 +10,7 @@ import {
 import { Role } from '../../utils/enums/enums';
 import { Conge } from 'src/conge/entities/conge.entity';
 import { UtilisateurEntreprise } from 'src/UtilisateurEntreprise/entities/utilisateur-entreprise.entity';
+import { Commentaire } from 'src/commentaires/entities/commentaire.entity';
 
 @Entity()
 export class Utilisateur {
@@ -42,6 +43,9 @@ export class Utilisateur {
 
   @OneToMany(() => Conge, (conge) => conge.utilisateur)
   conges: Conge[];
+
+  @OneToMany(() => Commentaire, (comment) => comment.utilisateur)
+  comment: Commentaire[];
 
   @CreateDateColumn({ type: 'timestamp' })
   dateCreation: Date;
